@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>FlaskApp</title>
+    <style>
+        table, th, td {
+          border: 1px solid black;
+          border-collapse: collapse;
+          padding: 15px;
+          text-align: center;
+        }
+        table thead th { 
+            font-size:10pt; 
+        }
+        h4 {
+            word-wrap: break-word;
+        }
+    </style>
+</head>
+<body>
+    <h1>Hello World!</h1>
+    <h2>This is a basic packet parser</h2>
+    <h3>{{ utc_dt }}</h3>
+
+    <p>Interface selected is: {{selected_interface}}</p>
+    <p>Interface selected is: {{selected_filter}} </p>
+
+    {% for packet in all_packets %}
+    
+        <h3>Packet: {{loop.index}}</h3>
+        <h4>Contents: {{packet.packet_readable}} </h4>
+        <h4>Payload: {{packet.packet_payload}}</h4>
+
+        <h4>Hex: {{packet.raw_hex}}</h4>
+        <h4>Binary: {{packet.raw_binary}}</h4>
+
+
+        <table class="tg">
+            <thead >
+              <tr  style="background-color: mediumpurple;">
+                {% set ns = namespace (categories = packet.formatted_packet_header |groupby('field_category'))   %}
+                {% for field_category in packet.formatted_packet_header | map(attribute="field_category")|  unique %}
+                    {% for category in ns.categories %}
+                        {% if field_category == category[0] %}
+                            <th colspan={{category[1]|count}} class="tg"><span style="color:white; text-decoration: none;" >{{category[0]}}</span></th>
+                        {% endif %}   
+                    {% endfor %}
+                {% endfor %}
+              </tr>
+              <tr style="background-color: lightcyan;">
+                {% for field in packet.formatted_packet_header %}
+                        <th class="tg"><a href="{{field.field_url}}" style="color:black; text-decoration: none;" target=”_blank”>{{field.field_name}}</a></th>
+                {% endfor %}
+              </tr>
+            </thead>
+            <tbody >
+              <tr >
+                {% for field in packet.formatted_packet_header %}
+                    <td class="tg"> {{field.octets}} Octets / {{field.bits}} Bits </td>
+                {% endfor %}
+              </tr>
+              <tr >
+                {% for field in packet.formatted_packet_header %}
+                    {% if (field.field_name == 'Destination MAC' or field.field_name == 'Source MAC') %}
+                        <td class="tg">{{field.field_data_hex | replace(" ", ":")}}</td>
+                    {% elif field.field_name == 'IP Version (4 bits) / Internet Header Length (4 bits)' %}
+                        <td class="tg">{{ field.field_data_hex[:1] }} / {{ field.field_data_hex[1:] }} </td>
+                    {% else %}
+                        <td class="tg">{{field.field_data_hex}}</td>
+                    {% endif %}   
+                
+                {% endfor %}
+              </tr>
+              <tr >
+                {% for field in packet.formatted_packet_header %}
+                    {% if (field.field_name == 'Time To Live (TTL)' or field.field_name == 'Protocol') %}
+                        <td class="tg">{{field.field_data_hex | int(base=16) }}</td>
+                    {% elif (field.field_name == 'Total Length') %}
+                        <td class="tg">
+                            {{field.field_data_hex | replace(" ", "") | int(base=16) }}
+                        </td>
+                    {% elif (field.field_name == 'Source Port' or field.field_name == 'Destination Port') %}
+                        <td class="tg">
+                            {{field.field_data_hex | replace(" ", "") | int(base=16) }}
+                        </td>
+                    {% elif (field.field_name == 'Sequence Number' or field.field_name == 'Acknowledgement') %}
+                        <td class="tg">
+                            {{field.field_data_hex | replace(" ", "") | int(base=16) }}
+                        </td>
+                    {% elif (field.field_name == 'Length') %}
+                        <td class="tg">
+                            {{field.field_data_hex | replace(" ", "") | int(base=16) }}
+                        </td>
+                    {% elif (field.field_name == 'Checksum') %}
+                        <td class="tg">
+                            0x{{field.field_data_hex | replace(" ", "")}}
+                        </td>
+                    {% elif (field.field_name == 'Source IP' or field.field_name == 'Destination IP') %}
+                        <td class="tg">
+                            {% set ns = namespace (ip = '') %} <!-- namespace allows us to access the variable outside the block -->
+                            {% for octet in field.field_data_hex.split(' ') %}
+                                {% set ns.ip = ns.ip + '.' + (octet | int(base=16) | string ) %}
+                            {% endfor %}
+
+                            {{ns.ip[1:]}} <!-- The loop above adds . to the from of the ip so we just remove it with [1:] -->
+                        </td>
+                    {% else %}
+                        <td class="tg">-</td>
+                    {% endif %}
+                {% endfor %}
+              </tr>
+              
+              <tr >
+                {% for field in packet.formatted_packet_header %}
+                    {% if field.field_name == 'IP Version (4 bits) / Internet Header Length (4 bits)' %}
+                        <td class="tg">{{ field.field_data_binary[:4]  }} / {{ field.field_data_binary[4:] }} </td>
+                    {% else %}
+                        <td class="tg">{{field.field_data_binary}}</td>
+                    {% endif %}
+                {% endfor %}
+              </tr>
+              
+            </tbody>
+        </table>
+        
+
+    {% endfor %}
+
+</body>
+</html>
+
+
