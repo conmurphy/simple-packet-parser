@@ -98,6 +98,7 @@
                 -->
 
                 {% for field in packet.formatted_packet_header %}
+
                     {% if (field.field_name == 'Time To Live (TTL)' or field.field_name == 'Protocol') %}
                         <td class="tg">{{field.field_data_hex | int(base=16) }}</td>
                     {% elif (field.field_name == 'Total Length') %}

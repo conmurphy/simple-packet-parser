@@ -104,9 +104,27 @@ def generate_monitoring_report():
         # 4. Append this data to the last element of new list (formatted_packet_header[-1]["field_data_hex"] = current_field_data)
         # 5. Do this first for hex and then for binary
         
+
         for field in HEADER_FORMAT:
-            if (field["field_category"] == "Ethernet" or field["field_category"] == "IP" or field["field_category"] == selected_filter):
-                
+            
+            # Only want to add the relevant fields to the table so need to check if they the correct filter (or Ethernet/IP)
+            # i.e. we shouldn't show TCP columns if UDP was selected
+            #
+            # I came across this interesting way to check for the rules instead of using if 'a 'or 'b' or 'c'
+            # https://stackoverflow.com/a/50656647
+            # 
+            
+            # if (field["field_category"] == "Ethernet" 
+            #         or field["field_category"] == "IP" 
+            #             or field["field_category"] == selected_filter):
+            
+            RULES = [
+                    field["field_category"] == "Ethernet",
+                    field["field_category"] == "IP" ,
+                    field["field_category"] == selected_filter
+            ]
+
+            if any(RULES):
                 formatted_packet_header.append(field) 
         
                 # Hex formatting
