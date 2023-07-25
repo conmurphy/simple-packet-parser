@@ -6,6 +6,10 @@ import re
 import json
 import copy
 
+# This was hacked together in a few hours so there is plenty of room for improvement 
+# however it should provide a good starting point
+# 
+
 app = Flask(__name__)
 
 # these are the filters that are available in the drop down menu
@@ -53,8 +57,11 @@ def generate_monitoring_report():
     selected_packet_count = int(request.args.get('select-packet-count'))
 
     # this is the line which captures the traffic using the scapy library
-    packets = scapy.sniff(iface=selected_interface, filter=selected_filter, count=selected_packet_count)
-    
+    try: 
+        packets = scapy.sniff(iface=selected_interface, filter=selected_filter, count=selected_packet_count)
+    except Exception as e:
+        return render_template('error.html',error=str(e))
+        
 
     all_packets = []
     
@@ -113,7 +120,7 @@ def generate_monitoring_report():
                 current_field_length_bits = field["bits"]
                 current_field_end_bits = previous_field_end_bits + current_field_length_bits
                 current_field_data_binary = (' ').join(re.findall('.{1,8}',binary_dump[previous_field_end_bits:current_field_end_bits]))
-                formatted_packet_header[-1]["field_data_binary"] = current_field_data_binary # Add the formatted data to HEADER_FORMAT  
+                formatted_packet_header[-1]["field_data_binary"] = current_field_data_binary 
                 previous_field_end_bits += field["bits"]
         
         # Capture all the packet information which is then sent to the HTML page and displayed
