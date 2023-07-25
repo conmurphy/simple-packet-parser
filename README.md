@@ -4,9 +4,14 @@ This is a proof of concept to demonstrate the formatting of data
 
 Table of Contents
 =================
+* [Demo ](#demo)
 * [Quick Start ](#quick-start)
 * [Guidelines and Limitations](#guidelines-and-limitations)
 * [License](#license)
+
+## Demo
+
+![alt text](assets/images/simple-packet-parser.gif?raw=true)
 
 ## Quick Start
 
